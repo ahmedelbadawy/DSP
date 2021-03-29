@@ -514,27 +514,39 @@
    </property>
   </action>
   <action name="action1_Signal">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>1 Signal</string>
+    <string>Signal 1</string>
    </property>
    <property name="statusTip">
-    <string>View one signal</string>
+    <string>View the first signal</string>
    </property>
   </action>
   <action name="action2_Signals">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>2 Signals</string>
+    <string>Signal 2</string>
    </property>
    <property name="statusTip">
-    <string>View two signal</string>
+    <string>View the second signal</string>
    </property>
   </action>
   <action name="action3_Signals">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>3 Signals</string>
+    <string>Signal 3</string>
    </property>
    <property name="statusTip">
-    <string>View three signal</string>
+    <string>View the third signal</string>
    </property>
   </action>
   <action name="actionSpectrogram">

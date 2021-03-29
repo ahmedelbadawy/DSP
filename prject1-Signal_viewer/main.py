@@ -13,7 +13,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
-        self.view_1() #start the programm with one signal viewed
+        #start the programm with one signal viewed
+        self.widget_2.hide()
+        self.widget_3.hide()
 
         #########variables######################
 
@@ -296,27 +298,28 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     ##################################################################
 
     ###########functions to control the number of showen plots###
-    def view_1(self):
-        self.widget_1.show()
-        self.widget_2.hide()
-        self.widget_3.hide()
-        self.radioButton_1.setChecked(True)
-        self.radioButton_2.setEnabled(False)
-        self.radioButton_3.setEnabled(False)
-    def view_2(self):
-        self.widget_1.show()
-        self.widget_2.show()
-        self.widget_3.hide()
-        self.radioButton_1.setChecked(True)
-        self.radioButton_2.setEnabled(True)
-        self.radioButton_3.setEnabled(False)
-    def view_3(self):
-        self.widget_1.show()
-        self.widget_2.show()
-        self.widget_3.show()
-        self.radioButton_1.setChecked(True)
-        self.radioButton_2.setEnabled(True)
-        self.radioButton_3.setEnabled(True)
+    def view_1(self , action):
+        if action:
+            self.widget_1.show()    
+            self.radioButton_1.setEnabled(True)
+        else:
+            self.widget_1.hide()    
+            self.radioButton_1.setEnabled(False)
+       
+    def view_2(self , action):
+        if action:
+            self.widget_2.show()    
+            self.radioButton_2.setEnabled(True)
+        else:
+            self.widget_2.hide()    
+            self.radioButton_2.setEnabled(False)
+    def view_3(self,action):
+        if action:
+            self.widget_3.show()    
+            self.radioButton_3.setEnabled(True)
+        else:
+            self.widget_3.hide()    
+            self.radioButton_3.setEnabled(False)
     ##function to show about in popup message
     def pop_up(self):
         msg = QMessageBox()
