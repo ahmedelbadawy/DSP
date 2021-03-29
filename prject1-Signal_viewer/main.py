@@ -234,22 +234,35 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.leftButton.setEnabled(False)
             self.upButton.setEnabled(False)
             self.downButton.setEnabled(False)
-        
+     ########function to plot spectrogram####################
     def spectro(self):
         self.current_widget.clear()
-        fs = 1000 ####sampling frequency
+        
         if self.radioButton_1.isChecked():
-            self.timer1 = 0
-            values = self.y[0]
-
+            if self.signals[0] == 0:
+                pass
+            else:
+                self.timer1 = 0
+                values = self.y[0]
+                self.plot(values)
         elif self.radioButton_2.isChecked():
-            self.timer2 = 0
-            values = self.y[1]
-
+            if self.signals[1] == 0:
+                pass
+            else:
+                self.timer2 = 0
+                values = self.y[1]
+                self.plot(values)
         else:
-            self.timer3 = 0
-            values = self.y[2]
+            if self.signals[2] == 0:
+                pass
+            else:
+                self.timer3 = 0
+                values = self.y[2]
+                self.plot(values)
 
+
+    def plot(self , values):
+        fs = 1000 ####sampling frequency
         f,t,Sxx = signal.spectrogram(values,fs)
 
         pg.setConfigOptions(imageAxisOrder='row-major')
@@ -277,26 +290,31 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.current_widget.setLimits(xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
         # Add labels to the axis
         self.current_widget.setLabel('bottom', "Time", units='s')
-        
+            
         self.current_widget.setLabel('left', "Frequency", units='Hz')
+
+    ##################################################################
 
     ###########functions to control the number of showen plots###
     def view_1(self):
         self.widget_1.show()
         self.widget_2.hide()
         self.widget_3.hide()
+        self.radioButton_1.setChecked(True)
         self.radioButton_2.setEnabled(False)
         self.radioButton_3.setEnabled(False)
     def view_2(self):
         self.widget_1.show()
         self.widget_2.show()
         self.widget_3.hide()
+        self.radioButton_1.setChecked(True)
         self.radioButton_2.setEnabled(True)
         self.radioButton_3.setEnabled(False)
     def view_3(self):
         self.widget_1.show()
         self.widget_2.show()
         self.widget_3.show()
+        self.radioButton_1.setChecked(True)
         self.radioButton_2.setEnabled(True)
         self.radioButton_3.setEnabled(True)
     ##function to show about in popup message
