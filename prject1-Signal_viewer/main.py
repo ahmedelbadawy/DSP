@@ -17,8 +17,6 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
         #########variables######################
 
-        self.n_widgets = 1 #number of showen widgets 
-
         self.current_widget = self.widget_1 #idicate the selected widget in groupBox
         #####timers for plots####
         self.timer1=0
@@ -216,12 +214,15 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     def close(self):
         if self.radioButton_1.isChecked():
             self.timer1 = 0
+            self.signals[0] = 0
         elif self.radioButton_2.isChecked():
             self.timer2 = 0
+            self.signals[1] = 0
         else:
             self.timer3 = 0
+            self.signals[2] = 0
         self.reset_widget()
-        if (self.timer1 == 0) and (self.timer2 == 0) and (self.timer3 == 0):
+        if (self.signals[0] == 0) and (self.signals[1] == 0) and (self.signals[2] == 0):
             self.actionZoom_in.setEnabled(False)
             self.actionZoom_out.setEnabled(False)
             self.actionPlay.setEnabled(False)
@@ -248,7 +249,6 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         else:
             self.timer3 = 0
             values = self.y[2]
-        # values = np.array(values)
 
         f,t,Sxx = signal.spectrogram(values,fs)
 
@@ -275,10 +275,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.current_widget.setYRange(0 , f[-1] , padding=0)
 
         self.current_widget.setLimits(xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
-        print(f[-1])
         # Add labels to the axis
         self.current_widget.setLabel('bottom', "Time", units='s')
-        # If you include the units, Pyqtgraph automatically scales the axis and adjusts the SI prefix (in this case kHz)
+        
         self.current_widget.setLabel('left', "Frequency", units='Hz')
 
     ###########functions to control the number of showen plots###
