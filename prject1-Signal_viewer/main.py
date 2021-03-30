@@ -30,9 +30,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.widget_configuration(self.widget_1 , "Signal 1")
         self.widget_configuration(self.widget_2, "Signal 2")
         self.widget_configuration(self.widget_3, "Signal 3")
-        self.widget_configuration(self.widget_1s , "Signal 1")
-        self.widget_configuration(self.widget_2s, "Signal 2")
-        self.widget_configuration(self.widget_3s, "Signal 3")
+        self.widget_configuration(self.widget_1s , "Spectrogram 1")
+        self.widget_configuration(self.widget_2s, "Spectrogram 2")
+        self.widget_configuration(self.widget_3s, "Spectrogram 3")
         #####to indicate which is shown signal graph(1) or spectrogram(0) 
         self.shown_1 = 1
         self.shown_2 = 1
@@ -334,14 +334,17 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.shown_1 =1
             self.widget_1.show()
             self.widget_1s.hide()
+            self.current_widget = self.widget_1
         elif self.radioButton_2.isChecked() and (self.shown_2 == 0):
             self.shown_2 =1
             self.widget_2.show()
             self.widget_2s.hide()
+            self.current_widget = self.widget_2
         elif self.radioButton_3.isChecked() and (self.shown_3 == 0):
             self.shown_3 =1
             self.widget_3.show()
             self.widget_3s.hide()
+            self.current_widget = self.widget_3
 
 
     ###########functions to control the number of shown plots###
@@ -464,24 +467,30 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         if fn != '':
             if QFileInfo(fn).suffix() == "" :
                 fn += '.pdf'
+            self.widget_1.show()
+            self.widget_1s.show()
+            self.widget_2.show()
+            self.widget_2s.show()
+            self.widget_3.show()
+            self.widget_3s.show()
             printer = QPrinter(QPrinter.HighResolution)
-            printer.setOrientation(0)
+            printer.setOrientation(1)
             printer.setOutputFormat(QPrinter.PdfFormat)
             printer.setOutputFileName(fn)
             painter = QtGui.QPainter(printer)
-            if self.action1_Signal.isChecked():
-                self.widget_1.show()
-            if self.action2_Signal.isChecked():
-                self.widget_2.show()
-            if self.action3_Signal.isChecked():
-                self.widget_3.show()
-
             pixmap = QtWidgets.QWidget.grab(self.centralwidget).scaled(
             printer.pageRect(QPrinter.DevicePixel).size().toSize(),
             QtCore.Qt.KeepAspectRatio)
             painter.drawPixmap(0, 0, pixmap)
             painter.end()
             self.view_start()
+            if self.action1_Signal.isChecked():
+                self.widget_1.show()
+            if self.action2_Signals.isChecked():
+                self.widget_2.show()
+            if self.action3_Signals.isChecked():
+                self.widget_3.show()
+
         
 
 def main():
