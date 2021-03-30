@@ -362,7 +362,7 @@ class Ui_MainWindow(object):
         self.actionPause.setShortcut(_translate("MainWindow", "Space"))
         self.actionStop.setText(_translate("MainWindow", "Stop"))
         self.actionStop.setStatusTip(_translate("MainWindow", "Stop signal flow"))
-        self.actionStop.setShortcut(_translate("MainWindow", "Ctrl+S"))
+        self.actionStop.setShortcut(_translate("MainWindow", "Ctrl+Q"))
         self.action1_Signal.setText(_translate("MainWindow", "Signal 1"))
         self.action1_Signal.setStatusTip(_translate("MainWindow", "View the first signal"))
         self.action2_Signals.setText(_translate("MainWindow", "Signal 2"))
