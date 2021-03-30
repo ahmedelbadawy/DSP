@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets , QtCore
+from PyQt5 import QtWidgets , QtCore, QtGui
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import sys  
@@ -7,16 +7,17 @@ import main_gui
 import pandas as pd
 from scipy import signal
 import numpy as np
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox , QFileDialog
+from PyQt5.Qt import QFileInfo
+from PyQt5.QtPrintSupport import QPrinter
 class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
         #start the programm with one signal viewed
-        self.widget_2.hide()
-        self.widget_3.hide()
-
+        self.view_start()
+        
         #########variables######################
 
         self.current_widget = self.widget_1 #idicate the selected widget in groupBox
@@ -29,12 +30,20 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.widget_configuration(self.widget_1 , "Signal 1")
         self.widget_configuration(self.widget_2, "Signal 2")
         self.widget_configuration(self.widget_3, "Signal 3")
-
+        self.widget_configuration(self.widget_1s , "Signal 1")
+        self.widget_configuration(self.widget_2s, "Signal 2")
+        self.widget_configuration(self.widget_3s, "Signal 3")
+        #####to indicate which is shown signal graph(1) or spectrogram(0) 
+        self.shown_1 = 1
+        self.shown_2 = 1
+        self.shown_3 = 1
+        
         self.signals = [0,0,0] #list to store loaded signals
         self.x = [0,0,0] ### x , y to recieve data for plotting
         self.y = [0,0,0]
         #########actions triggeration###########
         self.actionOpen.triggered.connect(self.openfile)
+        self.actionSave_as_PDF.triggered.connect(self.export_pdf)
         self.actionToolbar.triggered.connect(self.toggle_tool)
         self.actionStatus_bar.triggered.connect(self.toggle_status)
         self.actionPlay.triggered.connect(self.play)
@@ -43,7 +52,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionClose.triggered.connect(self.close)
         self.actionZoom_in.triggered.connect(self.zoom_in)
         self.actionZoom_out.triggered.connect(self.zoom_out)
-        self.actionSpectrogram.triggered.connect(self.spectro)
+        self.actionSpectrogram.triggered.connect(self.spectro) 
+        self.actionSignal_graph.triggered.connect(self.graph)
         self.action1_Signal.triggered.connect(self.view_1)
         self.action2_Signals.triggered.connect(self.view_2)
         self.action3_Signals.triggered.connect(self.view_3)
@@ -59,11 +69,22 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.radioButton_3.toggled.connect(self.select_3)
         # radiobutton.toggled.connect
     def select_1(self):
-        self.current_widget = self.widget_1
+        if self.shown_1 == 1 :
+            self.current_widget = self.widget_1
+        else:
+            self.current_widget = self.widget_1s
     def select_2(self):
-        self.current_widget = self.widget_2
+        if self.shown_2 == 1 :
+            self.current_widget = self.widget_2
+        else:
+            self.current_widget = self.widget_2s
     def select_3(self):
-        self.current_widget = self.widget_3
+        if self.shown_3 == 1 :
+            self.current_widget = self.widget_3
+        else:
+            self.current_widget = self.widget_3s
+        
+       
 
 
 
@@ -73,46 +94,58 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File',"", "Data files (*.csv)")
         if self.file_path:
             df = pd.read_csv(self.file_path)
+            self.current_widget.setLabel('bottom', "Time (ms")
             self.reset_widget()
-            self.current_widget.setLabel('bottom', "Time (ms)")
             ####control which widget to plot in
             if self.radioButton_1.isChecked():
+                self.current_widget = self.widget_1
+                self.shown_1 = 1
+                self.widget_1.show()
+                self.widget_1s.hide()
                 self.index1 = 0
                 self.signals[0] = self.file_path
                 self.file_name = os.path.basename(self.signals[0])
-                self.x[0] = df.index
                 self.y[0] = df.iloc[:,0]
                 self.reset_y(self.y[0])
-                self.data_line1 =  self.widget_1.plot(self.x[0], self.y[0],name = self.file_name ,pen=self.pen)
+                self.widget_1.plot(self.y[0],name = self.file_name ,pen=self.pen)
+                self.plot_spectro(self.y[0] , self.widget_1s) #to create spectrogram
                 ##### create a timer for widget1#####
                 self.timer1 = QtCore.QTimer()
                 self.timer1.setInterval(50)
                 self.timer1.timeout.connect(self.update_plot1)
+                
             elif self.radioButton_2.isChecked():
+                self.current_widget = self.widget_2
+                self.shown_2 = 1
+                self.widget_2.show()
+                self.widget_2s.hide()
                 self.index2 = 0
                 self.signals[1] = self.file_path
                 self.file_name = os.path.basename(self.signals[1])
-                self.x[1] = df.index
                 self.y[1] = df.iloc[:,0]
                 self.reset_y(self.y[1])
-                self.data_line2 =  self.widget_2.plot(self.x[1], self.y[1],name = self.file_name ,pen=self.pen)
+                self.widget_2.plot(self.y[1],name = self.file_name ,pen=self.pen)
+                self.plot_spectro(self.y[1] , self.widget_2s)
                 ##### create a timer for widget2#####
                 self.timer2 = QtCore.QTimer()
                 self.timer2.setInterval(50)
                 self.timer2.timeout.connect(self.update_plot2)
             else:
+                self.current_widget = self.widget_3
+                self.shown_3 = 1
+                self.widget_3.show()
+                self.widget_3s.hide()
                 self.index3 = 0
                 self.signals[2] = self.file_path
                 self.file_name = os.path.basename(self.signals[1])
-                self.x[2] = df.index
                 self.y[2] = df.iloc[:,0]
                 self.reset_y(self.y[2])
-                self.data_line3 =  self.widget_3.plot(self.x[2], self.y[2],name = self.file_name ,pen=self.pen)
+                self.widget_3.plot(self.y[2],name = self.file_name ,pen=self.pen)
+                self.plot_spectro(self.y[2] , self.widget_3s)
                 ##### create a timer for widget3#####
                 self.timer3 = QtCore.QTimer()
                 self.timer3.setInterval(50)
                 self.timer3.timeout.connect(self.update_plot3)
-            
             ######enable tools to control signal#####
             self.actionZoom_in.setEnabled(True)
             self.actionZoom_out.setEnabled(True)
@@ -121,10 +154,12 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.actionStop.setEnabled(True)
             self.actionClose.setEnabled(True)
             self.actionSpectrogram.setEnabled(True)
+            self.actionSignal_graph.setEnabled(True)
             self.rightButton.setEnabled(True)
             self.leftButton.setEnabled(True)
             self.upButton.setEnabled(True)
             self.downButton.setEnabled(True)
+            
 
     ########upate function to make the plot moving###### 
     def update_plot1(self):
@@ -132,84 +167,81 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         if self.signals[0] != 0:
             self.index1 = self.index1 + 1
             self.widget_1.setXRange(0 + self.index1, 1000 + self.index1, padding=0)
-            self.data_line1.setData(self.x[0], self.y[0]) 
 
     def update_plot2(self):
 
         if self.signals[1] != 0:
             self.index2 = self.index2 + 1
             self.widget_2.setXRange(0 + self.index2, 1000 + self.index2, padding=0)
-            self.data_line2.setData(self.x[1], self.y[1])
 
     def update_plot3(self):                    
         if self.signals[2] != 0:
             self.index3 = self.index3 + 1
             self.widget_3.setXRange(0 + self.index3, 1000 + self.index3, padding=0)
-            self.data_line3.setData(self.x[2], self.y[2]) 
                     
     #######play function to start the movement####
     def play(self):
-        if self.radioButton_1.isChecked():
+        if self.radioButton_1.isChecked() and (self.shown_1 == 1):
             if self.timer1 == 0:
                 pass
             else:
                 self.timer1.start()
-        elif self.radioButton_2.isChecked():
+        elif self.radioButton_2.isChecked() and (self.shown_2 == 1):
             if self.timer2 == 0:
                 pass
             else:
                 self.timer2.start()
-        else:
+        elif self.radioButton_3.isChecked() and (self.shown_3 == 1):
             if self.timer3 == 0:
                 pass
             else:
                 self.timer3.start()
     #######pause function to pause the movement####
     def pause(self):
-        if self.radioButton_1.isChecked():
+        if self.radioButton_1.isChecked() and (self.shown_1 == 1):
             if self.timer1 == 0:
                 pass
             else:
                 self.timer1.stop()
-        elif self.radioButton_2.isChecked():
+        elif self.radioButton_2.isChecked() and (self.shown_2 == 1):
             if self.timer2 == 0:
                 pass
             else:
                 self.timer2.stop()
-        else:
+        elif self.radioButton_3.isChecked() and (self.shown_3 == 1):
             if self.timer3 == 0:
                 pass
             else:
                 self.timer3.stop()
     #######stop function to stop the movement and reset the signal plot####
     def stop(self):
-        if self.radioButton_1.isChecked():
+        if self.radioButton_1.isChecked() and (self.shown_1 == 1):
             if self.timer1 == 0:
                 pass
             else:
                 self.timer1.stop()
                 self.index1 = 0
-                self.current_widget.plot(self.x[0], self.y[0], pen=self.pen)
+                self.current_widget.plot(self.y[0], pen=self.pen)
                 self.current_widget.setXRange(0, 1000, padding=0)
 
 
-        elif self.radioButton_2.isChecked():
+        elif self.radioButton_2.isChecked() and (self.shown_2 == 1):
             if self.timer2 == 0:
                 pass
             else:
                 self.timer2.stop()
                 self.index2 = 0
-                self.current_widget.plot(self.x[1], self.y[1], pen=self.pen)
+                self.current_widget.plot(self.y[1], pen=self.pen)
                 self.current_widget.setXRange(0, 1000, padding=0)
 
 
-        else:
+        elif self.radioButton_3.isChecked() and (self.shown_3 == 1):
             if self.timer3 == 0:
                 pass
             else:
                 self.timer3.stop()
                 self.index3 = 0
-                self.current_widget.plot(self.x[2], self.y[2], pen=self.pen)
+                self.current_widget.plot(self.y[2], pen=self.pen)
                 self.current_widget.setXRange(0, 1000, padding=0)
     
     #######close function to clear the plot####
@@ -236,40 +268,41 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.leftButton.setEnabled(False)
             self.upButton.setEnabled(False)
             self.downButton.setEnabled(False)
+            self.actionSignal_graph.setEnabled(False)
+
      ########function to plot spectrogram####################
     def spectro(self):
-        self.current_widget.clear()
         
-        if self.radioButton_1.isChecked():
-            if self.signals[0] == 0:
-                pass
-            else:
-                self.timer1 = 0
-                values = self.y[0]
-                self.plot(values)
-        elif self.radioButton_2.isChecked():
-            if self.signals[1] == 0:
-                pass
-            else:
-                self.timer2 = 0
-                values = self.y[1]
-                self.plot(values)
-        else:
-            if self.signals[2] == 0:
-                pass
-            else:
-                self.timer3 = 0
-                values = self.y[2]
-                self.plot(values)
+        if self.radioButton_1.isChecked() and self.signals[0] != 0:
+                self.timer1.stop()
+                self.shown_1 = 0
+                self.current_widget = self.widget_1s
+                self.widget_1.hide()
+                self.widget_1s.show()
+
+        elif self.radioButton_2.isChecked() and self.signals[1] != 0:
+                self.timer2.stop()
+                self.shown_2 = 0
+                self.current_widget = self.widget_2s
+                self.widget_2.hide()
+                self.widget_2s.show()
+
+        elif self.radioButton_3.isChecked() and self.signals[2] != 0:
+                self.timer3.stop()
+                self.shown_3 = 0
+                self.current_widget = self.widget_3s
+                self.widget_3.hide()
+                self.widget_3s.show()
 
 
-    def plot(self , values):
+
+    def plot_spectro(self , values , widget):
         fs = 1000 ####sampling frequency
         f,t,Sxx = signal.spectrogram(values,fs)
 
         pg.setConfigOptions(imageAxisOrder='row-major')
         self.img= pg.ImageItem()
-        self.current_widget.addItem(self.img)
+        widget.addItem(self.img)
         # Add a histogram to control the gradient of the image
         self.hist = pg.HistogramLUTItem()
         # Link the histogram to the image
@@ -286,18 +319,39 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
         self.img.scale(t[-1]/np.size(Sxx, axis=1), f[-1]/np.size(Sxx, axis=0))
 
-        self.current_widget.setXRange(0 , t[-1] , padding=0)
-        self.current_widget.setYRange(0 , f[-1] , padding=0)
+        widget.setXRange(0 , t[-1] , padding=0)
+        widget.setYRange(0 , f[-1] , padding=0)
 
-        self.current_widget.setLimits(xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
+        widget.setLimits(xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
         # Add labels to the axis
-        self.current_widget.setLabel('bottom', "Time", units='s')
+        widget.setLabel('bottom', "Time", units='s')
             
-        self.current_widget.setLabel('left', "Frequency", units='Hz')
+        widget.setLabel('left', "Frequency", units='Hz')
 
     ##################################################################
+    def graph(self):
+        if self.radioButton_1.isChecked() and (self.shown_1 == 0):
+            self.shown_1 =1
+            self.widget_1.show()
+            self.widget_1s.hide()
+        elif self.radioButton_2.isChecked() and (self.shown_2 == 0):
+            self.shown_2 =1
+            self.widget_2.show()
+            self.widget_2s.hide()
+        elif self.radioButton_3.isChecked() and (self.shown_3 == 0):
+            self.shown_3 =1
+            self.widget_3.show()
+            self.widget_3s.hide()
 
-    ###########functions to control the number of showen plots###
+
+    ###########functions to control the number of shown plots###
+    def view_start(self):
+        self.widget_2.hide()
+        self.widget_3.hide()
+        self.widget_1s.hide()
+        self.widget_2s.hide()
+        self.widget_3s.hide()
+
     def view_1(self , action):
         if action:
             self.widget_1.show()    
@@ -320,6 +374,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         else:
             self.widget_3.hide()    
             self.radioButton_3.setEnabled(False)
+    
     ##function to show about in popup message
     def pop_up(self):
         msg = QMessageBox()
@@ -371,16 +426,25 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         y_range = self.current_widget.getViewBox().state['viewRange'][1] # the visible range in x axis
         ry = 0.1 * (y_range[1] - y_range[0])
         self.current_widget.setYRange((y_range[0]-ry),(y_range[1]-ry) , padding=0)
-    ###function to adjust plot widget automatically after spectrogram
+    ###function to adjust plot widget automatically 
+
     def reset_widget(self):
-        self.current_widget.clear() ## to clear the current widget
-        self.current_widget.setLimits(xMin=-np.inf, xMax=np.inf, yMin=-np.inf, yMax=np.inf)
-        self.current_widget.setXRange(0 , 1000 , padding=0)
-        self.current_widget.setLabel('bottom')
-        self.current_widget.setLabel('left')
+        if self.current_widget == self.widget_1 or self.current_widget == self.widget_1s:
+            self.widget_1s.clear()
+            self.widget_1.clear()
+            self.widget_1.setXRange(0 , 1000 , padding=0)
+        elif self.current_widget == self.widget_2 or self.current_widget == self.widget_2s:
+            self.widget_2s.clear()
+            self.widget_2.clear()
+            self.widget_2.setXRange(0 , 1000 , padding=0)
+        elif self.current_widget == self.widget_3 or self.current_widget == self.widget_3s:
+            self.widget_3s.clear()
+            self.widget_3.clear()
+            self.widget_3.setXRange(0 , 1000 , padding=0)
 
+    
 
-    #####function to adjust automatically y axis range after zooming , scrolling or spectrogram
+    #####function to adjust automatically y axis range after zooming , scrolling 
     def reset_y(self , data):
 
         self.current_widget.setYRange(min(data),max(data) , padding=0)
@@ -389,11 +453,36 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     ########configuration of plot widgets#####    
     def widget_configuration(self,widget,title):
         widget.showGrid(True, True, alpha=0.8)
-        widget.setBackground('w')  
+        widget.setBackground('w') 
         widget.addLegend()
         widget.setTitle(title)
         widget.setXRange(0, 1000, padding=0)
+    
+    def export_pdf (self):
+        
+        fn, _ = QFileDialog.getSaveFileName(self, 'Export PDF', None, 'PDF files (.pdf);;All Files()')
+        if fn != '':
+            if QFileInfo(fn).suffix() == "" :
+                fn += '.pdf'
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOrientation(0)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(fn)
+            painter = QtGui.QPainter(printer)
+            if self.action1_Signal.isChecked():
+                self.widget_1.show()
+            if self.action2_Signal.isChecked():
+                self.widget_2.show()
+            if self.action3_Signal.isChecked():
+                self.widget_3.show()
 
+            pixmap = QtWidgets.QWidget.grab(self.centralwidget).scaled(
+            printer.pageRect(QPrinter.DevicePixel).size().toSize(),
+            QtCore.Qt.KeepAspectRatio)
+            painter.drawPixmap(0, 0, pixmap)
+            painter.end()
+            self.view_start()
+        
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
