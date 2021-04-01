@@ -411,13 +411,12 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             
             for self.i in range(3):
                 self.shown[self.i] = 1
-                self.timer[self.i].stop()
-            for self.i in self.spectros:
-                self.i.hide()
-            for self.i in self.graphs:
-                self.i.show()
-            for self.i in self.spectros:
-                self.i.show()
+                if self.timer[self.i] != 0 :
+                    self.timer[self.i].stop()
+                self.spectros[self.i].hide()
+                if self.signals[self.i] != 0:
+                    self.graphs[self.i].show()
+                    self.spectros[self.i].show()
             printer = QPrinter(QPrinter.HighResolution)
             printer.setOrientation(1)
             printer.setOutputFormat(QPrinter.PdfFormat)
