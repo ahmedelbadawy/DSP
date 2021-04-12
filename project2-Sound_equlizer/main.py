@@ -13,6 +13,8 @@ from PyQt5.QtWidgets import QMessageBox , QFileDialog
 from PyQt5.Qt import QFileInfo
 from PyQt5.QtPrintSupport import QPrinter
 from scipy.io import wavfile
+import sounddevice as sd
+import time
 
 class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     
@@ -156,6 +158,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionScroll_left.triggered.connect(self.scroll_left)
         self.actionScroll_up.triggered.connect(self.scroll_up)
         self.actionScroll_down.triggered.connect(self.scroll_down)
+        self.pushButton.clicked.connect(self.play_sound)
         ####chose the current_widget to control it
         # self.radioButton_1.toggled.connect(self.select_1)       
         # self.radioButton_2.toggled.connect(self.select_2)
@@ -318,6 +321,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionColor_3.setEnabled(True)
         self.actionColor_4.setEnabled(True)
         self.actionColor_5.setEnabled(True)
+        self.pushButton.setEnabled(True)
         for i in range(10):
             self.slider_list[i].setEnabled(True)
             
@@ -381,6 +385,14 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.reset_widget()
         self.disable_items()
 
+    def play_sound(self):
+        print(self.output_signal[self.current_widget_i])
+        duration = len(self.output_signal[self.current_widget_i]) / self.freq_sampling[self.current_widget_i]                
+        data = np.array(self.output_signal[self.current_widget_i])
+        sd.play(self.output_signal[self.current_widget_i],self.freq_sampling[self.current_widget_i])
+        time.sleep(duration)
+        sd.stop
+
     def disable_items(self):
         self.actionZoom_in.setEnabled(False)
         self.actionZoom_out.setEnabled(False)
@@ -398,6 +410,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionColor_3.setEnabled(False)
         self.actionColor_4.setEnabled(False)
         self.actionColor_5.setEnabled(False)
+        self.pushButton.setEnabled(False)
         for i in range(10):
             self.slider_list[i].setEnabled(False)        
 
