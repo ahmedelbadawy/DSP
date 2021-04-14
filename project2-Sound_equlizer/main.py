@@ -50,7 +50,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.slider_list = [self.verticalSlider_1, self.verticalSlider_2, self.verticalSlider_3, self.verticalSlider_4, self.verticalSlider_5, self.verticalSlider_6, self.verticalSlider_7,
         self.verticalSlider_8, self.verticalSlider_9, self.verticalSlider_10]
         for i in range(10):
-            self.gain[0][i] = self.slider_list[i].value()/10
+            self.gain[0][i] = float(self.slider_list[i].value())/10
         ######plot configuration#####
         self.pen = pg.mkPen(color=(255, 0, 0))
         # for i in sel
@@ -207,8 +207,10 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             # print(self.gain[self.current_widget_i][i])
             self.df.to_csv('sliders.csv')
 
-            self.plot_spectro(self.color[self.current_color[self.current_widget_i]])
             self.plot_output()
+
+            self.plot_spectro(self.color[self.current_color[self.current_widget_i]])
+            
         
        
 
@@ -238,8 +240,6 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.signals[self.current_widget_i] = self.file_path
             self.file_name[self.current_widget_i] = os.path.basename(self.signals[self.current_widget_i])
 
-            self.graphs[self.current_widget_i].show()
-            self.spectros[self.current_widget_i].hide()
             self.reset_widget()
     
             self.plot_input()
@@ -256,7 +256,6 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             # print(df)
             # print(self.file_name)
             # print(df.isin([self.file_name]).any().any())
-                # print('a7aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
             if self.df.isin([self.file_name[self.current_widget_i]]).any().any() :
                 self.gain[self.current_widget_i] = self.df[self.df['name'] == self.file_name[self.current_widget_i]].values.tolist()[0][1:]
                 # print(len(self.gain[self.current_widget_i]))
@@ -289,7 +288,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     def moving(self):
         ##### create a timer for widgets#####
         self.index[self.current_widget_i] = 0
-        self.interval[self.current_widget_i] = 70
+        self.interval[self.current_widget_i] = 110
         self.timer[self.current_widget_i] = QtCore.QTimer()
         self.timer[self.current_widget_i].setInterval(self.interval[self.current_widget_i])
         if self.current_widget_i == 0:
@@ -306,6 +305,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             # self.timer[2] = QtCore.QTimer()
             # self.timer[2].setInterval(50)
             self.timer[2].timeout.connect(self.update_plot3)
+
+
         self.timer[self.current_widget_i].start()
     
    
@@ -339,24 +340,24 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
             
 
-    ########upate function to make the plot moving###### 
+    ########update function to make the plot moving###### 
     def update_plot1(self):
 
         if self.signals[0] != 0:
-            self.index[0] = self.index[0] + 10
+            self.index[0] = self.index[0] + 50
             self.graphs[0].setXRange(0 + self.index[0], 1000 + self.index[0], padding=0)
             self.graphs[3].setXRange(0 + self.index[0], 1000 + self.index[0], padding=0)
 
     def update_plot2(self):
 
         if self.signals[1] != 0:
-            self.index[1] = self.index[1] + 10
+            self.index[1] = self.index[1] + 50
             self.graphs[1].setXRange(0 + self.index[1], 1000 + self.index[1], padding=0)
             self.graphs[4].setXRange(0 + self.index[1], 1000 + self.index[1], padding=0)
 
     def update_plot3(self):                    
         if self.signals[2] != 0:
-            self.index[2] = self.index[2] + 10
+            self.index[2] = self.index[2] + 50
             self.graphs[2].setXRange(0 + self.index[2], 1000 + self.index[2], padding=0)
             self.graphs[5].setXRange(0 + self.index[2], 1000 + self.index[2], padding=0)
                     
@@ -382,12 +383,12 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.graphs[self.current_widget_i + 3].setXRange(0, 1000, padding=0)
     def faster(self):
         if self.interval[self.current_widget_i] > 10 :
-            self.interval[self.current_widget_i] -= 30
+            self.interval[self.current_widget_i] -= 50
             print(self.interval[self.current_widget_i])
             self.timer[self.current_widget_i].setInterval(self.interval[self.current_widget_i])
     def slower(self):
-        if self.interval[self.current_widget_i] < 130 :
-            self.interval[self.current_widget_i] += 30
+        if self.interval[self.current_widget_i] < 210 :
+            self.interval[self.current_widget_i] += 50
             print(self.interval[self.current_widget_i])
             self.timer[self.current_widget_i].setInterval(self.interval[self.current_widget_i])
     #######close function to clear the plot####
@@ -399,9 +400,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.disable_items()
 
     def play_sound(self):
-        print(self.output_signal[self.current_widget_i])
+        # print(self.output_signal[self.current_widget_i])
         duration = len(self.output_signal[self.current_widget_i]) / self.freq_sampling[self.current_widget_i]                
-        data = np.array(self.output_signal[self.current_widget_i])
         sd.play(self.output_signal[self.current_widget_i],self.freq_sampling[self.current_widget_i])
         time.sleep(duration)
         sd.stop
@@ -479,10 +479,10 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.spectros[self.current_widget_i].setLabel('left', "Frequency", units='Hz')
 
     def update_spectro(self):
-        self.spectro_min[self.current_widget_i] = (self.verticalSlider_11.value()/100)
-        self.spectro_max[self.current_widget_i] = (self.verticalSlider_12.value()/100)
-        self.verticalSlider_11.setMaximum(self.spectro_max[self.current_widget_i] * 100)
-        self.verticalSlider_12.setMinimum(self.spectro_min[self.current_widget_i] * 100)
+        self.spectro_min[self.current_widget_i] = float(self.verticalSlider_11.value())/100
+        self.spectro_max[self.current_widget_i] = float(self.verticalSlider_12.value())/100
+        self.verticalSlider_11.setMaximum(self.verticalSlider_12.value()) ## the maximum slider cant be higher than the min slider
+        self.verticalSlider_12.setMinimum(self.verticalSlider_11.value())
         self.spectros[self.current_widget_i].setYRange(self.spectro_min[self.current_widget_i] * self.f[-1] , self.spectro_max[self.current_widget_i] * self.f[-1], padding=0)
     #####function for color palette
     def color_palette(self, i):
@@ -540,11 +540,11 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.graphs[self.current_widget_i + 3].setXRange((x_range[0]-rx),(x_range[1]-rx) , padding=0)
 
     def scroll_up(self):
-        y_range = self.graphs[self.current_widget_i].getViewBox().state['viewRange'][1] # the visible range in x axis
+        y_range = self.graphs[self.current_widget_i].getViewBox().state['viewRange'][1] # the visible range in y axis
         ry = 0.1 * (y_range[1] - y_range[0])
         self.graphs[self.current_widget_i].setYRange((y_range[0]+ry),(y_range[1]+ry) , padding=0)
 
-        y_range = self.graphs[self.current_widget_i + 3].getViewBox().state['viewRange'][1] # the visible range in x axis
+        y_range = self.graphs[self.current_widget_i + 3].getViewBox().state['viewRange'][1] # the visible range in y axis
         ry = 0.1 * (y_range[1] - y_range[0])
         self.graphs[self.current_widget_i + 3].setYRange((y_range[0]+ry),(y_range[1]+ry) , padding=0)
     
