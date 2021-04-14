@@ -50,7 +50,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.slider_list = [self.verticalSlider_1, self.verticalSlider_2, self.verticalSlider_3, self.verticalSlider_4, self.verticalSlider_5, self.verticalSlider_6, self.verticalSlider_7,
         self.verticalSlider_8, self.verticalSlider_9, self.verticalSlider_10]
         for i in range(10):
-            self.gain[0][i] = self.slider_list[i].value()/100.0
+            self.gain[0][i] = self.slider_list[i].value()/10
         ######plot configuration#####
         self.pen = pg.mkPen(color=(255, 0, 0))
         # for i in sel
@@ -83,6 +83,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         ]
         for i in self.spectros:
             i.hide()
+        
+        self.spectro_min = 3 * [0]
+        self.spectro_max = 3 * [1]
 
         # self.current_widget = self.graphs[0] #idicate the selected widget in groupBox
         self.current_widget_i = 0  ###indicate current widget index
@@ -133,6 +136,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.verticalSlider_8.valueChanged.connect(lambda: self.get_gain(7))
         self.verticalSlider_9.valueChanged.connect(lambda: self.get_gain(8))
         self.verticalSlider_10.valueChanged.connect(lambda: self.get_gain(9))
+        self.verticalSlider_11.valueChanged.connect(self.update_spectro)
+        self.verticalSlider_12.valueChanged.connect(self.update_spectro)
         self.tabWidget.currentChanged.connect(self.select)
         self.actionOpen.triggered.connect(self.openfile)
         self.actionSave_as_PDF.triggered.connect(self.export_pdf)
@@ -171,7 +176,10 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         else:
             self.enable_items()
         for i in range(10):
-            self.slider_list[i].setValue(self.gain[self.current_widget_i][i]*100)
+            self.slider_list[i].setValue(self.gain[self.current_widget_i][i]*10)
+
+        self.verticalSlider_11.setValue(self.spectro_min[self.current_widget_i]* 100)
+        self.verticalSlider_12.setValue(self.spectro_max[self.current_widget_i] * 100)
         
 
         # print(self.current_widget_i)
@@ -189,7 +197,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     #     self.current_widget_i = 2
     def get_gain(self , i):
         if self.signals[self.current_widget_i] != 0:
-            self.gain[self.current_widget_i][i] =  self.slider_list[i].value()/100.0  
+            self.gain[self.current_widget_i][i] =  float(self.slider_list[i].value())/10
             if self.df.isin([self.file_name[self.current_widget_i]]).any().any() :
                 index = self.df.index[self.df['name'] == self.file_name[self.current_widget_i]].tolist()[0]
                 self.df.iloc[index,1:] = self.gain[self.current_widget_i]
@@ -239,7 +247,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.enable_items()
             self.moving()
             self.update_sliders()
+            self.spectro_sliders()
             self.plot_spectro(self.color[0]) #to create spectrogram
+            
     def update_sliders(self):
         if os.path.isfile('sliders.csv'):
             self.df = pd.read_csv('sliders.csv', index_col=0)
@@ -254,7 +264,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             else:
                 self.gain[self.current_widget_i] = 10 * [1]
             for i in range(10):
-                self.slider_list[i].setValue(self.gain[self.current_widget_i][i]*100)
+                self.slider_list[i].setValue(self.gain[self.current_widget_i][i]*10)
 
         else:
             data = [self.file_name[self.current_widget_i]] +  self.gain[self.current_widget_i]
@@ -324,6 +334,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.pushButton.setEnabled(True)
         for i in range(10):
             self.slider_list[i].setEnabled(True)
+        self.verticalSlider_11.setEnabled(True)
+        self.verticalSlider_12.setEnabled(True)
+
             
 
     ########upate function to make the plot moving###### 
@@ -412,7 +425,10 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionColor_5.setEnabled(False)
         self.pushButton.setEnabled(False)
         for i in range(10):
-            self.slider_list[i].setEnabled(False)        
+            self.slider_list[i].setEnabled(False)   
+        self.verticalSlider_11.setEnabled(False)
+        self.verticalSlider_12.setEnabled(False)
+
 
      ########function to plot spectrogram####################
     def spectro(self):
@@ -425,13 +441,18 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
                 self.spectros[self.current_widget_i].hide()
                 self.shown[self.current_widget_i] = 0
 
+    def spectro_sliders(self):
+        self.verticalSlider_11.setValue(0)
+        self.verticalSlider_12.setValue(100)
+        self.spectro_min[self.current_widget_i]  = 0.0
+        self.spectro_max[self.current_widget_i]  = 1.0
 
     def plot_spectro(self , color):
-        self.spectros[self.current_widget_i].clear()
         fs = self.freq_sampling[self.current_widget_i] ####sampling frequency
-        f,t,Sxx = signal.spectrogram(self.output_signal[self.current_widget_i],fs)
-
+        self.f,self.t,self.Sxx = signal.spectrogram(self.output_signal[self.current_widget_i],fs)
+        self.spectros[self.current_widget_i].clear()
         pg.setConfigOptions(imageAxisOrder='row-major')
+
         self.img= pg.ImageItem()
         self.spectros[self.current_widget_i].addItem(self.img)
         # Add a histogram to control the gradient of the image
@@ -439,23 +460,30 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         # Link the histogram to the image
         self.hist.setImageItem(self.img)
         # Fit the min and max levels of the histogram
-        self.hist.setLevels(np.min(Sxx), np.max(Sxx))
+        self.hist.setLevels(np.min(self.Sxx), np.max(self.Sxx))
 
         self.hist.gradient.restoreState(
                 {'mode': 'rgb',
                 'ticks': color})
-        self.img.setImage(Sxx)
+        self.img.setImage(self.Sxx)
 
-        self.img.scale(t[-1]/np.size(Sxx, axis=1), f[-1]/np.size(Sxx, axis=0))
+        self.img.scale(self.t[-1]/np.size(self.Sxx, axis=1),  self.f[-1]/np.size(self.Sxx, axis=0))
 
-        self.spectros[self.current_widget_i].setXRange(0 , t[-1] , padding=0)
-        self.spectros[self.current_widget_i].setYRange(0 , f[-1] , padding=0)
+        self.spectros[self.current_widget_i].setXRange(0 , self.t[-1] , padding=0)
+        self.spectros[self.current_widget_i].setYRange(0 ,  self.f[-1] , padding=0)
 
-        self.spectros[self.current_widget_i].setLimits(xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
+        self.spectros[self.current_widget_i].setLimits(xMin=0, xMax=self.t[-1], yMin= 0 , yMax= self.f[-1])
         # Add labels to the axis
         self.spectros[self.current_widget_i].setLabel('bottom', "Time", units='s')
             
         self.spectros[self.current_widget_i].setLabel('left', "Frequency", units='Hz')
+
+    def update_spectro(self):
+        self.spectro_min[self.current_widget_i] = (self.verticalSlider_11.value()/100)
+        self.spectro_max[self.current_widget_i] = (self.verticalSlider_12.value()/100)
+        self.verticalSlider_11.setMaximum(self.spectro_max[self.current_widget_i] * 100)
+        self.verticalSlider_12.setMinimum(self.spectro_min[self.current_widget_i] * 100)
+        self.spectros[self.current_widget_i].setYRange(self.spectro_min[self.current_widget_i] * self.f[-1] , self.spectro_max[self.current_widget_i] * self.f[-1], padding=0)
     #####function for color palette
     def color_palette(self, i):
         self.plot_spectro(self.color[i])
@@ -536,6 +564,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.graphs[self.current_widget_i + 3].clear()
         self.graphs[self.current_widget_i + 3].setLabel('bottom', "Time (ms)")
         self.spectros[self.current_widget_i].clear()
+        self.spectros[self.current_widget_i].hide()
+        self.shown[self.current_widget_i] = 0
         
         
             

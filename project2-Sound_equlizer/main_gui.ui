@@ -154,6 +154,24 @@
     <item row="2" column="0">
      <layout class="QVBoxLayout" name="verticalLayout_6">
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>                                                                                              Equalizer                                                                                                                  </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Specrogram range</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
          <widget class="QSlider" name="verticalSlider_1">
@@ -161,13 +179,13 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="singleStep">
            <number>1</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -180,10 +198,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -196,10 +214,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -212,10 +230,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -228,10 +246,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -244,10 +262,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -260,10 +278,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -276,10 +294,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -292,10 +310,10 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
           </property>
           <property name="value">
-           <number>100</number>
+           <number>10</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -308,7 +326,52 @@
            <bool>false</bool>
           </property>
           <property name="maximum">
-           <number>500</number>
+           <number>50</number>
+          </property>
+          <property name="value">
+           <number>10</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QSlider" name="verticalSlider_11">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="verticalSlider_12">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximum">
+           <number>100</number>
           </property>
           <property name="value">
            <number>100</number>
