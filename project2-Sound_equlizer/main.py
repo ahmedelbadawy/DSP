@@ -5,7 +5,7 @@ import sys
 import os
 import os.path
 import main_gui
-from fourier_transform import fourier
+from fourier_transform import fourier , spectro_range
 import pandas as pd
 from scipy import signal
 import numpy as np
@@ -15,6 +15,8 @@ from PyQt5.QtPrintSupport import QPrinter
 from scipy.io import wavfile
 import sounddevice as sd
 import time
+from pdf import GeneratePDF
+import pyqtgraph.exporters
 
 class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     
@@ -209,7 +211,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
             self.plot_output()
 
-            self.plot_spectro(self.color[self.current_color[self.current_widget_i]])
+            self.plot_spectro(self.output_signal[self.current_widget_i] , self.color[self.current_color[self.current_widget_i]])
             
         
        
@@ -248,7 +250,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.moving()
             self.update_sliders()
             self.spectro_sliders()
-            self.plot_spectro(self.color[0]) #to create spectrogram
+            self.plot_spectro(self.output_signal[self.current_widget_i],self.color[0]) #to create spectrogram
             
     def update_sliders(self):
         if os.path.isfile('sliders.csv'):
@@ -288,9 +290,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     def moving(self):
         ##### create a timer for widgets#####
         self.index[self.current_widget_i] = 0
-        self.interval[self.current_widget_i] = 110
+        self.interval[self.current_widget_i] = 25
         self.timer[self.current_widget_i] = QtCore.QTimer()
-        self.timer[self.current_widget_i].setInterval(self.interval[self.current_widget_i])
+        self.timer[self.current_widget_i].setInterval(50)
         if self.current_widget_i == 0:
             # self.timer[0] = QtCore.QTimer()
             # self.timer[0].setInterval(10)
@@ -344,20 +346,20 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     def update_plot1(self):
 
         if self.signals[0] != 0:
-            self.index[0] = self.index[0] + 50
+            self.index[0] = self.index[0] + self.interval[self.current_widget_i]
             self.graphs[0].setXRange(0 + self.index[0], 1000 + self.index[0], padding=0)
             self.graphs[3].setXRange(0 + self.index[0], 1000 + self.index[0], padding=0)
 
     def update_plot2(self):
 
         if self.signals[1] != 0:
-            self.index[1] = self.index[1] + 50
+            self.index[1] = self.index[1] + self.interval[self.current_widget_i]
             self.graphs[1].setXRange(0 + self.index[1], 1000 + self.index[1], padding=0)
             self.graphs[4].setXRange(0 + self.index[1], 1000 + self.index[1], padding=0)
 
     def update_plot3(self):                    
         if self.signals[2] != 0:
-            self.index[2] = self.index[2] + 50
+            self.index[2] = self.index[2] + self.interval[self.current_widget_i]
             self.graphs[2].setXRange(0 + self.index[2], 1000 + self.index[2], padding=0)
             self.graphs[5].setXRange(0 + self.index[2], 1000 + self.index[2], padding=0)
                     
@@ -382,13 +384,13 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.graphs[self.current_widget_i].setXRange(0, 1000, padding=0)
             self.graphs[self.current_widget_i + 3].setXRange(0, 1000, padding=0)
     def faster(self):
-        if self.interval[self.current_widget_i] > 10 :
-            self.interval[self.current_widget_i] -= 50
+        if self.interval[self.current_widget_i] < 45 :
+            self.interval[self.current_widget_i] += 10
             print(self.interval[self.current_widget_i])
             self.timer[self.current_widget_i].setInterval(self.interval[self.current_widget_i])
     def slower(self):
-        if self.interval[self.current_widget_i] < 210 :
-            self.interval[self.current_widget_i] += 50
+        if self.interval[self.current_widget_i] > 5 :
+            self.interval[self.current_widget_i] -= 10
             print(self.interval[self.current_widget_i])
             self.timer[self.current_widget_i].setInterval(self.interval[self.current_widget_i])
     #######close function to clear the plot####
@@ -447,9 +449,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.spectro_min[self.current_widget_i]  = 0.0
         self.spectro_max[self.current_widget_i]  = 1.0
 
-    def plot_spectro(self , color):
+    def plot_spectro(self , output_signal ,color):
         fs = self.freq_sampling[self.current_widget_i] ####sampling frequency
-        self.f,self.t,self.Sxx = signal.spectrogram(self.output_signal[self.current_widget_i],fs)
+        self.f,self.t,self.Sxx = signal.spectrogram(output_signal,fs)
         self.spectros[self.current_widget_i].clear()
         pg.setConfigOptions(imageAxisOrder='row-major')
 
@@ -483,10 +485,11 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.spectro_max[self.current_widget_i] = float(self.verticalSlider_12.value())/100
         self.verticalSlider_11.setMaximum(self.verticalSlider_12.value()) ## the maximum slider cant be higher than the min slider
         self.verticalSlider_12.setMinimum(self.verticalSlider_11.value())
-        self.spectros[self.current_widget_i].setYRange(self.spectro_min[self.current_widget_i] * self.f[-1] , self.spectro_max[self.current_widget_i] * self.f[-1], padding=0)
+        spectro_values = spectro_range(self.output_signal[self.current_widget_i] , self.spectro_min[self.current_widget_i] , self.spectro_max[self.current_widget_i])
+        self.plot_spectro(spectro_values , self.color[self.current_color[self.current_widget_i]])
     #####function for color palette
     def color_palette(self, i):
-        self.plot_spectro(self.color[i])
+        self.plot_spectro(self.output_signal[self.current_widget_i] , self.color[i])
         self.current_color[self.current_widget_i] = i
 
     ##################################################################
@@ -574,8 +577,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
         # self.current_widget.setYRange(min(data),max(data) , padding=0)
         # self.current_widget.setLimits()
-        self.graphs[i].setYRange(min(data),max(data) , padding=0)
-        self.graphs[i].setLimits(xMin=0, xMax=(len(data) - 1), yMin=min(data), yMax=max(data))
+        self.graphs[i].setYRange(np.float(min(data)),np.float(max(data)) , padding=0)
+        self.graphs[i].setLimits(xMin=0, xMax=(len(data) - 1), yMin=np.float(min(data)), yMax=np.float(max(data)))
         
 
     ########configuration of plot widgets#####    
@@ -592,32 +595,26 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         if fn != '':
             if QFileInfo(fn).suffix() == "" :
                 fn += '.pdf'
-            
-            for self.i in range(3):
-                self.shown[self.i] = 1
-                if self.timer[self.i] != 0 :
-                    self.timer[self.i].stop()
-                self.spectros[self.i].hide()
-                if self.signals[self.i] != 0:
-                    self.graphs[self.i].show()
-                    self.spectros[self.i].show()
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOrientation(1)
-            printer.setOutputFormat(QPrinter.PdfFormat)
-            printer.setOutputFileName(fn)
-            painter = QtGui.QPainter(printer)
-            pixmap = QtWidgets.QWidget.grab(self.centralwidget).scaled(
-            printer.pageRect(QPrinter.DevicePixel).size().toSize(),
-            QtCore.Qt.KeepAspectRatio)
-            painter.drawPixmap(0, 0, pixmap)
-            painter.end()
-            self.view_start()
-            if self.action1_Signal.isChecked():
-                self.graphs[0].show()
-            if self.action2_Signals.isChecked():
-                self.graphs[1].show()
-            if self.action3_Signals.isChecked():
-                self.graphs[2].show()
+        
+
+            if self.graphs[self.current_widget_i].scene():
+                # export all items in all viewers as images
+                exporter1 = pg.exporters.ImageExporter(self.graphs[self.current_widget_i].scene())
+                exporter1.export('input_signal.png')
+    
+                exporter3 = pg.exporters.ImageExporter(self.graphs[self.current_widget_i + 3].scene())
+                exporter3.export('output_signal.png')
+    
+                #show spectrogram before printing
+                self.spectros[self.current_widget_i].show()
+                exporter4 = pg.exporters.ImageExporter(self.spectros[self.current_widget_i].scene())
+                exporter4.export('spectrogram.png')
+                
+                my_pdf = GeneratePDF(fn)
+                my_pdf.create_pdf()
+                my_pdf.save_pdf()
+                if self.shown[self.current_widget_i] == 0 :
+                    self.spectros[self.current_widget_i].hide()
             
            
 

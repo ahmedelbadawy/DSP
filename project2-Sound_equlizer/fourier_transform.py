@@ -16,3 +16,15 @@ def fourier(data ,gain) :
     modified= np.multiply(new_signal, np.exp(1j*np.angle(ft)))    
     output_signal = irfft(modified)
     return output_signal , yf
+
+
+def spectro_range(data , min , max):
+        ft = rfft(data)
+        begin_index = int((len(ft)) * min) 
+        end_index = int((len(ft)) * max) 
+        ft[0:begin_index] = 0
+        ft[end_index:len(ft)] = 0
+        output_signal = irfft(ft)
+        return output_signal
+
+
