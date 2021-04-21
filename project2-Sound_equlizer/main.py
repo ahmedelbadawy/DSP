@@ -17,6 +17,8 @@ import sounddevice as sd
 import time
 from pdf import GeneratePDF
 import pyqtgraph.exporters
+from scipy.io.wavfile import write
+
 
 class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     
@@ -166,6 +168,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionScroll_up.triggered.connect(self.scroll_up)
         self.actionScroll_down.triggered.connect(self.scroll_down)
         self.pushButton.clicked.connect(self.play_sound)
+        # self.actionSave.triggered.connect(self.save_audio)
         ####chose the current_widget to control it
         # self.radioButton_1.toggled.connect(self.select_1)       
         # self.radioButton_2.toggled.connect(self.select_2)
@@ -212,6 +215,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.plot_output()
 
             self.plot_spectro(self.output_signal[self.current_widget_i] , self.color[self.current_color[self.current_widget_i]])
+            y_range = self.graphs[self.current_widget_i].getViewBox().state['viewRange'][1]
+            self.graphs[self.current_widget_i + 3].setYRange(y_range[0] * self.gain[self.current_widget_i][i] , y_range[1] * self.gain[self.current_widget_i][i],padding=0)
             
         
        
@@ -284,8 +289,9 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         # print(self.gain[self.current_widget_i] )
         self.output_signal[self.current_widget_i], z = fourier(self.y[self.current_widget_i] , self.gain[self.current_widget_i])
         self.graphs[self.current_widget_i + 3].clear()
-        self.limits(self.output_signal[self.current_widget_i] ,self.current_widget_i + 3 )
         self.graphs[self.current_widget_i + 3].plot(self.output_signal[self.current_widget_i] ,name = self.file_name[self.current_widget_i] ,pen=self.pen)
+        self.limits(self.output_signal[self.current_widget_i] ,self.current_widget_i + 3 )
+        
 
     def moving(self):
         ##### create a timer for widgets#####
@@ -334,6 +340,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionColor_3.setEnabled(True)
         self.actionColor_4.setEnabled(True)
         self.actionColor_5.setEnabled(True)
+        self.actionSave_as_PDF.setEnabled(True)
         self.pushButton.setEnabled(True)
         for i in range(10):
             self.slider_list[i].setEnabled(True)
@@ -347,26 +354,27 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
         if self.signals[0] != 0:
             self.index[0] = self.index[0] + self.interval[self.current_widget_i]
-            self.graphs[0].setXRange(0 + self.index[0], 1000 + self.index[0], padding=0)
-            self.graphs[3].setXRange(0 + self.index[0], 1000 + self.index[0], padding=0)
+            self.graphs[0].setXRange(0 + self.index[0], 5000 + self.index[0], padding=0)
+            self.graphs[3].setXRange(0 + self.index[0], 5000 + self.index[0], padding=0)
 
     def update_plot2(self):
 
         if self.signals[1] != 0:
             self.index[1] = self.index[1] + self.interval[self.current_widget_i]
-            self.graphs[1].setXRange(0 + self.index[1], 1000 + self.index[1], padding=0)
-            self.graphs[4].setXRange(0 + self.index[1], 1000 + self.index[1], padding=0)
+            self.graphs[1].setXRange(0 + self.index[1], 5000 + self.index[1], padding=0)
+            self.graphs[4].setXRange(0 + self.index[1], 5000 + self.index[1], padding=0)
 
     def update_plot3(self):                    
         if self.signals[2] != 0:
             self.index[2] = self.index[2] + self.interval[self.current_widget_i]
-            self.graphs[2].setXRange(0 + self.index[2], 1000 + self.index[2], padding=0)
-            self.graphs[5].setXRange(0 + self.index[2], 1000 + self.index[2], padding=0)
+            self.graphs[2].setXRange(0 + self.index[2], 5000 + self.index[2], padding=0)
+            self.graphs[5].setXRange(0 + self.index[2], 5000 + self.index[2], padding=0)
                     
     #######play function to start the movement####
     def play(self):
         
         if self.timer[self.current_widget_i] != 0 :
+            self.limits(self.output_signal[self.current_widget_i] ,self.current_widget_i )
             self.timer[self.current_widget_i].start()
 
     #######pause function to pause the movement####
@@ -381,8 +389,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         if self.timer[self.current_widget_i] != 0 :
             self.timer[self.current_widget_i].stop()
             self.index[self.current_widget_i] = 0
-            self.graphs[self.current_widget_i].setXRange(0, 1000, padding=0)
-            self.graphs[self.current_widget_i + 3].setXRange(0, 1000, padding=0)
+            self.graphs[self.current_widget_i].setXRange(0, 5000, padding=0)
+            self.graphs[self.current_widget_i + 3].setXRange(0, 5000, padding=0)
     def faster(self):
         if self.interval[self.current_widget_i] < 45 :
             self.interval[self.current_widget_i] += 10
@@ -425,11 +433,13 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionColor_3.setEnabled(False)
         self.actionColor_4.setEnabled(False)
         self.actionColor_5.setEnabled(False)
+        self.actionSave_as_PDF.setEnabled(False)
         self.pushButton.setEnabled(False)
         for i in range(10):
             self.slider_list[i].setEnabled(False)   
         self.verticalSlider_11.setEnabled(False)
         self.verticalSlider_12.setEnabled(False)
+        
 
 
      ########function to plot spectrogram####################
@@ -487,6 +497,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.verticalSlider_12.setMinimum(self.verticalSlider_11.value())
         spectro_values = spectro_range(self.output_signal[self.current_widget_i] , self.spectro_min[self.current_widget_i] , self.spectro_max[self.current_widget_i])
         self.plot_spectro(spectro_values , self.color[self.current_color[self.current_widget_i]])
+        self.spectros[self.current_widget_i].setYRange(self.f[-1] * self.spectro_min[self.current_widget_i] ,  self.f[-1] * self.spectro_max[self.current_widget_i] , padding=0)
     #####function for color palette
     def color_palette(self, i):
         self.plot_spectro(self.output_signal[self.current_widget_i] , self.color[i])
@@ -494,7 +505,6 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
     ##################################################################
    
-
     
     ##function to show about in popup message
     def pop_up(self):
@@ -587,7 +597,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         widget.setBackground('w') 
         widget.addLegend()
         widget.setTitle(title)
-        widget.setXRange(0, 1000, padding=0)
+        widget.setXRange(0, 5000, padding=0)
     
     def export_pdf (self):
         
@@ -615,7 +625,13 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
                 my_pdf.save_pdf()
                 if self.shown[self.current_widget_i] == 0 :
                     self.spectros[self.current_widget_i].hide()
-            
+    
+    # def save_audio(self):
+    #     fn, _ = QFileDialog.getSaveFileName(self, 'Save the audio', None, 'WAV files (.WAV);;All Files()')
+    #     if fn != '':
+    #         if QFileInfo(fn).suffix() == "" :
+    #             fn += '.WAV'
+    #         write("mysinewave_after.wav", SAMPLE_RATE, new)
            
 
         

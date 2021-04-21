@@ -7,7 +7,7 @@ SAMPLE_RATE = 40000  # Hertz
 DURATION = 5  # Seconds
 signal = np.array(10 * [None])
 gain = np.array(10 * [2])
-synthetic_signals = 10 * [None]
+synthetic_signals = np.array(10 * [None])
 tone = 0
 def generate_sine_wave(freq, sample_rate, duration):
     x = np.linspace(0, duration, sample_rate * duration, endpoint=False)
