@@ -1,4 +1,4 @@
-#Signal viewer
+# Signal viewer
 ----
 ###### Run `main.py` to run the GUI
 
